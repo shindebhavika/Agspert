@@ -1,55 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React ,{useState}from "react";
 import {
-  Flex,
-  Heading,
-  Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
   Button,
-  FormControl,
+  Flex,
+
   FormLabel,
-  Switch,
+ 
   useColorMode,
   useTheme,
-  UnorderedList,
-  ListItem,
+  
+  Text,
+ 
+  Checkbox,
 } from "@chakra-ui/react";
-import Select from "react-select";
-import Products from "../utils/Products.json"
-function SaleOrderForm() {
-  const theme = useTheme();
-  const { colorMode } = useColorMode();
-  const [products, setProducts] = useState([ Products]);
-  const [selectedProducts, setSelectedProducts] = useState([]);
 
-  useEffect(() => {
-    // Fetch product data from the JSON file
-    fetch("Products")
-      .then((response) => response.json())
-      .then((data) => {
-        // Transform the data to the format needed by react-select
-        const formattedProducts = data.map((product) => ({
-          value: product.id.toString(),
-          label: product.name,
-          owners: product.sku.map((sku) => ({
-            id: sku.id,
-            name: `Owner ${sku.id}`,
-            email: `owner${sku.id}@example.com`,
-          })),
-        }));
-        setProducts(formattedProducts);
-      })
-      .catch((error) => console.error("Error fetching products:", error));
-  }, []);
+
+import Select from "react-select";
+import Products from "../utils/Products.json";
+
+import FormField from "../Components/FormField";
+import ProductList from "../Components/ProductList";
+
+function SaleOrderForm({ isOpen, onClose }) {
+  const theme = useTheme();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [clickedProducts, setClickedProducts] = useState({});
 
   const customStyles = {
     control: (provided) => ({
       ...provided,
-      backgroundColor: colorMode === "dark" ? theme.colors.gray[700] : theme.colors.white,
-      borderColor: colorMode === "dark" ? theme.colors.gray[600] : theme.colors.gray[300],
+      backgroundColor:
+        colorMode === "dark" ? theme.colors.gray[700] : theme.colors.white,
+      borderColor:
+        colorMode === "dark" ? theme.colors.gray[600] : theme.colors.gray[300],
       color: colorMode === "dark" ? theme.colors.white : theme.colors.black,
+      padding: "6px",
     }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: colorMode === "dark" ? theme.colors.gray[700] : theme.colors.white,
+      backgroundColor:
+        colorMode === "dark" ? theme.colors.gray[700] : theme.colors.white,
     }),
     option: (provided, state) => ({
       ...provided,
@@ -64,6 +61,7 @@ function SaleOrderForm() {
       "&:active": {
         backgroundColor: theme.colors.teal[500],
         color: theme.colors.white,
+        borderRadius: "9999px",
       },
     }),
     singleValue: (provided) => ({
@@ -74,6 +72,10 @@ function SaleOrderForm() {
       ...provided,
       backgroundColor: theme.colors.teal[100],
       color: theme.colors.teal[700],
+      borderRadius: "9999px",
+      padding: "6px",
+      fontWeight: "bold",
+      fontSize: "1.2em",
     }),
     multiValueLabel: (provided) => ({
       ...provided,
@@ -91,86 +93,94 @@ function SaleOrderForm() {
 
   const handleSelectChange = (selectedOptions) => {
     setSelectedProducts(selectedOptions);
+    setClickedProducts({});
+  };
+
+  const handleProductClick = (productId) => {
+    setClickedProducts((prevState) => ({
+      ...prevState,
+      [productId]: !prevState[productId],
+    }));
   };
 
   return (
-    <Flex
-      h="100vh"
-      alignItems="center"
-      justifyContent="center"
-      padding="3%"
-      flexDirection="column"
-    >
-      <Flex
-        h="100%"
-        flexDirection="column"
-        w="100%"
-        p="12"
-        borderRadius={8}
-        boxShadow="lg"
-      >
-        <Heading mb={6}>SALE ORDER FORM</Heading>
-        <FormLabel htmlFor="invoiceNumber">Invoice Number*</FormLabel>
-        <Input
-          id="invoiceNumber"
-          placeholder="Enter Invoice Number"
-          variant="filled"
-          mb={3}
-        />
-        <FormLabel htmlFor="invoiceDate">Invoice Date*</FormLabel>
-        <Input
-          id="invoiceDate"
-          placeholder="Select Date"
-          type="date"
-          variant="filled"
-          mb={6}
-        />
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" p="1rem">
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Sale Order Form</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} />
+          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" />
+          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} />
 
-        <FormLabel htmlFor="customer">Customer*</FormLabel>
-        <Input
-          id="customer"
-          placeholder="Enter Customer Name"
-          variant="filled"
-          mb={6}
-        />
-
-        <FormLabel htmlFor="products">All Products*</FormLabel>
-        <Select
-          id="products"
-          options={products}
-          isMulti
-          placeholder="Select Products"
-          styles={customStyles}
-          mb={6}
-          onChange={handleSelectChange}
-        />
-
-        <UnorderedList>
-          {selectedProducts.map((product) => (
-            <ListItem key={product.value} mb={2}>
-              <Select
-                value={product}
-                options={product.owners.map((owner) => ({
-                  value: product.value,
-                  label: `${owner.name} - ${owner.email}`,
-                }))}
-                styles={customStyles}
-              />
-            </ListItem>
-          ))}
-        </UnorderedList>
-
-        <Button colorScheme="teal" mb={8}>
-          Submit Order
-        </Button>
-        <FormControl display="flex" alignItems="center">
-          <FormLabel htmlFor="dark_mode" mb="0">
-            Enable Dark Mode?
+          <FormLabel htmlFor="products" className="input-label-required">
+            All Product
           </FormLabel>
-          <Switch id="dark_mode" colorScheme="teal" size="lg" />
-        </FormControl>
-      </Flex>
-    </Flex>
+          <Select
+            id="products"
+            options={Products.map((product) => ({
+              value: product.id,
+              label: product.name,
+            }))}
+            isMulti
+            placeholder="Select Products"
+            styles={customStyles}
+            mb={6}
+            onChange={handleSelectChange}
+          />
+
+<ProductList
+        selectedProducts={selectedProducts}
+        Products={Products}
+        handleProductClick={handleProductClick}
+        clickedProducts={clickedProducts}
+      />
+
+          <Flex justifyContent="space-between">
+            <Checkbox className="custom-checkbox" colorScheme="green" size="lg">
+              Is Paid
+            </Checkbox>
+
+            <Flex className="total-summary">
+              <Text className="total-summary-text">
+                Total Price:
+              </Text>
+              <Text className="total-summary-text">
+                Total Items:
+              </Text>
+            </Flex>
+          </Flex>
+        </ModalBody>
+        <ModalFooter justifyContent="space-between" >
+       
+         <Button
+            size="md"
+            height="48px"
+            width="200px"
+            border="2px"
+            color="red"
+            bg="#FFF5F5"
+            _hover={{ bg: "#E53E3E", color: "white" }}
+            onClick={onClose}
+          >
+            Discard
+          </Button>
+          <Button
+            size="md"
+            height="48px"
+            width="200px"
+            border="2px"
+            borderColor="green"
+            _hover={{ bg: "#38A169", color: "white" }}
+            onClick={onClose}
+          >
+            Create Sale Order
+          </Button>
+       
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
