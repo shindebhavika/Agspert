@@ -11,7 +11,8 @@ import {
 
 const ProductList = ({ 
   data = [], 
-  handleSkuDetails = () => {}
+  handleSkuDetails = () => {},
+  readOnly = false
 }) => {
 
 
@@ -23,7 +24,7 @@ const ProductList = ({
 
 
   return (
-    <Accordion allowMultiple>
+    <Accordion allowMultiple >
       <AccordionItem >
         <h2>
           <AccordionButton>
@@ -41,6 +42,7 @@ const ProductList = ({
                 handleSkuDetails = {handleSkuDetails}
                 productId = {value}
                 index={index}
+                readOnly = {readOnly}
               
               />
 

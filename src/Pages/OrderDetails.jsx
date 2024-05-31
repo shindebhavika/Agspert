@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Tr,Th,Table,Thead,
-  Tbody,TableContainer,
-  Td,Tfoot,Button,Flex,
+  Tr, Th, Table, Thead,
+  Tbody, TableContainer,
+  Td, Tfoot, Button, Flex,
 } from '@chakra-ui/react';
 import { EditIcon, ViewIcon } from '@chakra-ui/icons';
 import SaleOrderForm from './SaleOrderForm'; // assuming SaleOrderForm component exists
@@ -16,6 +16,8 @@ function OrderDetails() {
   const [selectedOption, setSelectedOption] = useState('active');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [reqOrders, setReqOrders] = useState([])
+  const [orderToModify, setOrderToModify] = useState(null)
+
 
 
   useEffect(() => {
@@ -33,10 +35,10 @@ function OrderDetails() {
     setIsFormOpen(false);
   };
 
-  function handleTableData (orderTypes) {
+  function handleTableData(orderTypes) {
     // to set the requeted data (completed/active) in the table 
     setSelectedOption(orderTypes)
-    const paymentStatus = orderTypes === 'completed' 
+    const paymentStatus = orderTypes === 'completed'
     const orders = getOrders()
     const activeOrders = orders?.filter(
       order => order.isPaid == paymentStatus
@@ -44,11 +46,16 @@ function OrderDetails() {
     setReqOrders(activeOrders)
   }
 
+  function handleOrderModify (order) {
+    setIsFormOpen(true)
+    setOrderToModify(order)
+  }
+
   return (
     <>
       <ToggleTheme />
 
-      <SaleOrderForm isOpen={isFormOpen} onClose={handleCloseForm} />
+      <SaleOrderForm isOpen={isFormOpen} onClose={handleCloseForm} orderToModify = {orderToModify}/>
 
 
       <Flex justifyContent="space-between" mt="4rem" ml="3rem" mr="3rem">
@@ -98,17 +105,27 @@ function OrderDetails() {
                 <Td isNumeric>${order?.totalPrice?.toFixed(2)}</Td>
                 <Td>{order?.lastModified}</Td>
                 <Td>
-                  <Button leftIcon={<EditIcon />} size="sm" bg="#68D391" colorScheme="#68D391" mr={2}>
-                    Edit
-                  </Button>
-                  <Button leftIcon={<ViewIcon />} size="sm" colorScheme="yellow" color="white">
-                    View
-                  </Button>
+                  {
+                    selectedOption == 'active' ?
+                      (
+                        <Button leftIcon={<EditIcon />} size="sm" bg="#68D391" colorScheme="#68D391" mr={2} onClick={ () => handleOrderModify (order)}>
+                          Edit
+                        </Button>
+
+                      ) :
+                      (
+                        <Button leftIcon={<ViewIcon />} size="sm" colorScheme="yellow" color="white" onClick={() => handleOrderModify(order)}>
+                          View
+                        </Button>
+                      )
+                  }
+
+
                 </Td>
               </Tr>
             ))}
           </Tbody>
-          
+
           <Tfoot></Tfoot>
         </Table>
       </TableContainer>

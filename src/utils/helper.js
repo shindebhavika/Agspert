@@ -9,3 +9,6 @@ export const getCurrentDate = () => {
 
   export const getOrders = () => JSON.parse(localStorage.getItem('orders') || '[]')
   export const setOrder = (data) => localStorage.setItem('orders',JSON.stringify(data));
+  export function generateOrderId() {
+    return Math.floor(1000 + Math.random() * 9000);
+  }

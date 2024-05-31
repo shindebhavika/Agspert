@@ -10,10 +10,10 @@ import Select from "react-select";
 import Products from "../utils/Products.json";
 import FormField from "../Components/FormField";
 import ProductList from "../Components/ProductList";
-import { getCurrentDate, getOrders, setOrder } from "../utils/helper";
+import { generateOrderId, getCurrentDate, getOrders, setOrder } from "../utils/helper";
 
 
-function SaleOrderForm({ isOpen, onClose }) {
+function SaleOrderForm({ isOpen, onClose, orderToModify}) {
 
   const theme = useTheme();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -50,6 +50,33 @@ function SaleOrderForm({ isOpen, onClose }) {
     setItems({})
     setTotalPrice(0)
   }
+
+  function prefillData (data) {
+    const {
+      customerId,
+      customerName,
+      invoiceDate,
+      invoiceNo,
+      products,
+      isPaid,
+      totalPrice,
+    } = data || {}
+
+    setCustomerId(customerId)
+    setCustomerName(customerName)
+    setInvoiceDate(invoiceDate)
+    setInvoiceNo(invoiceNo)
+    setIsPaid(isPaid)
+    setTotalPrice(totalPrice)
+    setProducts(products)
+ 
+  }
+
+  useEffect(() => {
+    // if we have order to modify will prefill all the data
+    if(!orderToModify) return ;
+    prefillData(orderToModify)
+  }, [orderToModify])
 
   const customStyles = {
     control: (provided) => ({
@@ -122,8 +149,16 @@ function SaleOrderForm({ isOpen, onClose }) {
       products,
       isPaid,
       totalPrice,
-      lastModified : getCurrentDate()
+      lastModified : getCurrentDate(),
+      orderId : generateOrderId()
     }
+
+
+    // This function will get called on creating new order and also for editing prev order
+    // so we have to handle this accordingly 
+    // to solve this we can check the orderId
+
+
     // fetching prev data
     const orders = getOrders()
     // pushing new order
@@ -185,10 +220,10 @@ function SaleOrderForm({ isOpen, onClose }) {
         <ModalCloseButton />
 
         <ModalBody>
-          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} />
-          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} />
-          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} />
-          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} />
+          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} readOnly = {orderToModify} />
+          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} readOnly = {orderToModify}/>
+          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} readOnly = {orderToModify}/>
+          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} readOnly = {orderToModify}/>
 
 
           <FormLabel htmlFor="products" className="input-label-required">
@@ -209,6 +244,7 @@ function SaleOrderForm({ isOpen, onClose }) {
             onChange={handleSelectChange}
             closeMenuOnSelect={false}
             value={products}
+            isDisabled = {orderToModify}
           />
 
           {
@@ -216,6 +252,7 @@ function SaleOrderForm({ isOpen, onClose }) {
               <ProductList
                 data={product}
                 handleSkuDetails={handleSkuDetails}
+                readOnly = {orderToModify}
               />
             ))
           }

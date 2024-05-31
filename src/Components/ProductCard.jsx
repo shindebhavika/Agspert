@@ -15,7 +15,8 @@ export default function ProductCard({
   data = {}, 
   index = 0, 
   handleSkuDetails = () => { }, 
-  productId = '' 
+  productId = '',
+  readOnly = false 
 }) {
 
   const [price, setPrice] = useState('')
@@ -80,6 +81,7 @@ export default function ProductCard({
                   (e) => setPrice(e.target.value)
                 }
                 value={price}
+                readOnly = {readOnly}
               />
             </Flex>
             <Flex flexDirection="column">
@@ -92,6 +94,7 @@ export default function ProductCard({
                   (e) => setQuantity(e.target.value)
                 }
                 value={quantity}
+                readOnly = {readOnly}
 
               />
             </Flex>
