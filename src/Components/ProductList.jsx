@@ -1,60 +1,56 @@
-import React, { useState } from 'react';
-import { UnorderedList, ListItem, Text, SimpleGrid, Icon } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-import ProductCard from './ProductCard'; // Adjust the import based on your file structure
+import ProductCard from './ProductCard'
 
-const ProductList = ({ selectedProducts, Products, handleProductClick }) => {
-  const [expandedProducts, setExpandedProducts] = useState({});
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Box
+} from '@chakra-ui/react'
 
-  const toggleExpand = (productId) => {
-    setExpandedProducts((prev) => ({
-      ...prev,
-      [productId]: !prev[productId],
-    }));
-  };
+const ProductList = ({ 
+  data = [], 
+  handleSkuDetails = () => {}
+}) => {
+
+
+  const {
+    label = '',
+    value = '',
+    sku = []
+  } = data || {}
+
 
   return (
-    <UnorderedList>
-      {selectedProducts.map((product) => {
-        const selectedProduct = Products.find((p) => p.id === product.value);
-        const isExpanded = expandedProducts[product.value];
-
-        return (
-          <ListItem
-            key={product.value}
-            mb={2}
-            cursor="pointer"
-          >
-            <Text display="flex" alignItems="center" onClick={() => handleProductClick(product.value)}>
-              <Icon
-                as={isExpanded ? ChevronUpIcon : ChevronDownIcon}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleExpand(product.value);
-                }}
-                mr={2}
-                cursor="pointer"
+    <Accordion allowMultiple>
+      <AccordionItem >
+        <h2>
+          <AccordionButton>
+            <Box as='span' flex='1' textAlign='left'>
+              {label}
+            </Box>
+            <AccordionIcon />
+          </AccordionButton>
+        </h2>
+        <AccordionPanel pb={4}  maxH="450px" overflowY="auto">
+          {
+            sku?.map((item, index) => (
+              <ProductCard 
+                data = {item} 
+                handleSkuDetails = {handleSkuDetails}
+                productId = {value}
+                index={index}
+              
               />
-              {selectedProduct.name}
-            </Text>
-            {isExpanded && (
-              <SimpleGrid
-                columns={[1]}
-                spacing={4}
-                mt={4}
-                maxH="40vh"
-                overflowY="auto"
-              >
-                {selectedProduct.sku.map((sku, index) => (
-                  <ProductCard key={sku.id} sku={sku} index={index} />
-                ))}
-              </SimpleGrid>
-            )}
-          </ListItem>
-        );
-      })}
-    </UnorderedList>
-  );
+
+            ))
+          }
+         
+        </AccordionPanel>
+      </AccordionItem>
+    </Accordion>
+  )
 };
 
 export default ProductList;

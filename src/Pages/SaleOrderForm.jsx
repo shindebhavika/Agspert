@@ -1,37 +1,55 @@
-import React ,{useState}from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  Flex,
-
-  FormLabel,
- 
-  useColorMode,
-  useTheme,
-  
-  Text,
- 
-  Checkbox,
+  Modal, ModalOverlay, ModalContent,
+  ModalHeader, ModalFooter, ModalBody,
+  ModalCloseButton, Button, Flex,
+  FormLabel, useColorMode,
+  useTheme, Text, Checkbox,
 } from "@chakra-ui/react";
-
-
 import Select from "react-select";
 import Products from "../utils/Products.json";
-
 import FormField from "../Components/FormField";
 import ProductList from "../Components/ProductList";
+import { getCurrentDate, getOrders, setOrder } from "../utils/helper";
+
 
 function SaleOrderForm({ isOpen, onClose }) {
+
   const theme = useTheme();
   const { colorMode, toggleColorMode } = useColorMode();
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [clickedProducts, setClickedProducts] = useState({});
+
+  // data fields
+  const [customerName, setCustomerName] = useState('')
+  const [customerId, setCustomerId] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState('')
+  const [invoiceNo, setInvoiceNo] = useState('')
+  const [isPaid, setIsPaid] = useState(false)
+  const [products, setProducts] = useState([]);
+  const [items, setItems] = useState({});
+  const [totalPrice, setTotalPrice] = useState(0)
+
+  // to set on change data in respective fields
+  function handleOnChangeData(key, value) {
+    const setFuncByKey = {
+      customerName: setCustomerName,
+      customerId: setCustomerId,
+      invoiceDate: setInvoiceDate,
+      invoiceNo: setInvoiceNo,
+      isPaid: setIsPaid,
+    }
+    setFuncByKey[key](value)
+  }
+
+  function handleDiscardOrder() {
+    setCustomerName('')
+    setCustomerId('')
+    setInvoiceDate('')
+    setInvoiceNo('')
+    setIsPaid(false)
+    setProducts([])
+    setItems({})
+    setTotalPrice(0)
+  }
 
   const customStyles = {
     control: (provided) => ({
@@ -53,10 +71,10 @@ function SaleOrderForm({ isOpen, onClose }) {
       backgroundColor: state.isSelected
         ? theme.colors.teal[500]
         : state.isFocused
-        ? theme.colors.teal[100]
-        : colorMode === "dark"
-        ? theme.colors.gray[700]
-        : theme.colors.white,
+          ? theme.colors.teal[100]
+          : colorMode === "dark"
+            ? theme.colors.gray[700]
+            : theme.colors.white,
       color: colorMode === "dark" ? theme.colors.white : theme.colors.black,
       "&:active": {
         backgroundColor: theme.colors.teal[500],
@@ -91,60 +109,135 @@ function SaleOrderForm({ isOpen, onClose }) {
     }),
   };
 
-  const handleSelectChange = (selectedOptions) => {
-    setSelectedProducts(selectedOptions);
-    setClickedProducts({});
+  const handleSelectChange = (selectedProducts) => {
+    setProducts(selectedProducts)
   };
 
-  const handleProductClick = (productId) => {
-    setClickedProducts((prevState) => ({
-      ...prevState,
-      [productId]: !prevState[productId],
-    }));
-  };
+  function createOrder() {
+    const newOrder = {
+      customerId,
+      customerName,
+      invoiceDate,
+      invoiceNo,
+      products,
+      isPaid,
+      totalPrice,
+      lastModified : getCurrentDate()
+    }
+    // fetching prev data
+    const orders = getOrders()
+    // pushing new order
+    orders?.push(newOrder)
+    // updating orders
+    setOrder(orders)
+    // closing modal
+    onClose()
+    // reseting all data fields
+    handleDiscardOrder()
+  }
+
+  function handleSkuDetails({
+    price, quantity,
+    productId, id
+  }) {
+
+    // This function is for adding the skus prices and quantity
+    // This is critical for now can be ignored, will see this at last
+
+    const storedProducts = [...products]
+    const productIndex = products.findIndex(product => product.value = productId)
+    const {
+      sku = []
+    } = storedProducts[productIndex]
+    const skuIndex = sku.findIndex(sku => sku.id = id)
+    const updatedSku = {
+      ...(sku?.[skuIndex] || {}),
+      price, quantity
+    }
+    sku.splice(skuIndex, 1, updatedSku)
+    storedProducts[productIndex].sku = sku
+    // we can ignore this for now 
+    // will undestand this later
+    setItems({
+      ...items,
+      [id]: price * quantity
+    })
+  }
+
+  useEffect(() => {
+    // to get updated total price of order
+    let totalPrice = 0
+    Object.values(items).forEach(
+      price => totalPrice = totalPrice + price
+    )
+    setTotalPrice(totalPrice)
+  }, [items])
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" p="1rem">
+
       <ModalOverlay />
+
       <ModalContent>
+
         <ModalHeader>Sale Order Form</ModalHeader>
+
         <ModalCloseButton />
+
         <ModalBody>
-          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} />
-          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" />
-          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} />
+          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} />
+          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} />
+          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} />
+          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} />
+
 
           <FormLabel htmlFor="products" className="input-label-required">
             All Product
           </FormLabel>
+
           <Select
             id="products"
             options={Products.map((product) => ({
               value: product.id,
               label: product.name,
+              sku: product.sku
             }))}
             isMulti
             placeholder="Select Products"
             styles={customStyles}
             mb={6}
             onChange={handleSelectChange}
+            closeMenuOnSelect={false}
+            value={products}
           />
 
-<ProductList
-        selectedProducts={selectedProducts}
-        Products={Products}
-        handleProductClick={handleProductClick}
-        clickedProducts={clickedProducts}
-      />
+          {
+            products?.map((product) => (
+              <ProductList
+                data={product}
+                handleSkuDetails={handleSkuDetails}
+              />
+            ))
+          }
+
+
 
           <Flex justifyContent="space-between">
-            <Checkbox className="custom-checkbox" colorScheme="green" size="lg">
+            <Checkbox 
+              className="custom-checkbox" 
+              colorScheme="green" 
+              size="lg"
+              onChange={
+                () => setIsPaid(!isPaid)
+              }
+              isChecked={isPaid}
+            >
               Is Paid
             </Checkbox>
 
             <Flex className="total-summary">
               <Text className="total-summary-text">
-                Total Price:
+                Total Price: {totalPrice}
               </Text>
               <Text className="total-summary-text">
                 Total Items:
@@ -152,9 +245,11 @@ function SaleOrderForm({ isOpen, onClose }) {
             </Flex>
           </Flex>
         </ModalBody>
+
+
         <ModalFooter justifyContent="space-between" >
-       
-         <Button
+
+          <Button
             size="md"
             height="48px"
             width="200px"
@@ -162,7 +257,7 @@ function SaleOrderForm({ isOpen, onClose }) {
             color="red"
             bg="#FFF5F5"
             _hover={{ bg: "#E53E3E", color: "white" }}
-            onClick={onClose}
+            onClick={handleDiscardOrder}
           >
             Discard
           </Button>
@@ -173,11 +268,11 @@ function SaleOrderForm({ isOpen, onClose }) {
             border="2px"
             borderColor="green"
             _hover={{ bg: "#38A169", color: "white" }}
-            onClick={onClose}
+            onClick={createOrder}
           >
             Create Sale Order
           </Button>
-       
+
         </ModalFooter>
       </ModalContent>
     </Modal>
