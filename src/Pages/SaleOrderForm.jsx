@@ -272,7 +272,7 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             onChange={handleSelectChange}
             closeMenuOnSelect={false}
             value={products}
-            isDisabled = {orderToModify}
+            isDisabled = {isOrederViwing}
           />
 
           {
@@ -304,7 +304,7 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
                 Total Price: {totalPrice}
               </Text>
               <Text className="total-summary-text">
-                Total Items:
+                Total Items: {Object.keys(items).length}
               </Text>
             </Flex>
           </Flex>
@@ -322,6 +322,8 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             bg="#FFF5F5"
             _hover={{ bg: "#E53E3E", color: "white" }}
             onClick={handleDiscardOrder}
+            isDisabled = {isOrederViwing}
+
           >
             Discard
           </Button>
@@ -333,6 +335,7 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             borderColor="green"
             _hover={{ bg: "#38A169", color: "white" }}
             onClick={createOrder}
+            isDisabled = {isOrederViwing}
           >
             {
               orderToModify ?
