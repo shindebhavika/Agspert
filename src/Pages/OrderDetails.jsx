@@ -8,6 +8,8 @@ import { EditIcon, ViewIcon } from '@chakra-ui/icons';
 import SaleOrderForm from './SaleOrderForm'; // assuming SaleOrderForm component exists
 import ToggleTheme from '../Components/ToggleTheme';
 import { getOrders } from '../utils/helper';
+import { useSetRecoilState } from 'recoil';
+import { isViewingOrderAtom } from '../recoil-atoms';
 
 function OrderDetails() {
 
@@ -17,6 +19,9 @@ function OrderDetails() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [reqOrders, setReqOrders] = useState([])
   const [orderToModify, setOrderToModify] = useState(null)
+  const [areOrdersModified, setAreOrdersModified] = useState(true)
+
+  const setIsOrederViwing = useSetRecoilState(isViewingOrderAtom)
 
 
 
@@ -25,10 +30,12 @@ function OrderDetails() {
     const orders = getOrders()
     const activeOrders = orders?.filter(order => order.isPaid == false)
     setReqOrders(activeOrders)
-  }, [])
+    setAreOrdersModified(false)
+  }, [areOrdersModified])
 
   const handleAddOrder = () => {
     setIsFormOpen(true);
+    setIsOrederViwing(false)
   };
 
   const handleCloseForm = () => {
@@ -46,16 +53,21 @@ function OrderDetails() {
     setReqOrders(activeOrders)
   }
 
-  function handleOrderModify (order) {
+  function handleOrderModify (order, request) {
     setIsFormOpen(true)
     setOrderToModify(order)
+    setIsOrederViwing(request == 'view order')
+  }
+
+  function handleOrderUpdate () {
+    setAreOrdersModified(true)
   }
 
   return (
     <>
       <ToggleTheme />
 
-      <SaleOrderForm isOpen={isFormOpen} onClose={handleCloseForm} orderToModify = {orderToModify}/>
+      <SaleOrderForm isOpen={isFormOpen} onClose={handleCloseForm} orderToModify = {orderToModify} handleOrderUpdate = {handleOrderUpdate}/>
 
 
       <Flex justifyContent="space-between" mt="4rem" ml="3rem" mr="3rem">
@@ -108,13 +120,13 @@ function OrderDetails() {
                   {
                     selectedOption == 'active' ?
                       (
-                        <Button leftIcon={<EditIcon />} size="sm" bg="#68D391" colorScheme="#68D391" mr={2} onClick={ () => handleOrderModify (order)}>
+                        <Button leftIcon={<EditIcon />} size="sm" bg="#68D391" colorScheme="#68D391" mr={2} onClick={ () => handleOrderModify (order, 'edit order')}>
                           Edit
                         </Button>
 
                       ) :
                       (
-                        <Button leftIcon={<ViewIcon />} size="sm" colorScheme="yellow" color="white" onClick={() => handleOrderModify(order)}>
+                        <Button leftIcon={<ViewIcon />} size="sm" colorScheme="yellow" color="white" onClick={() => handleOrderModify(order, 'view order')}>
                           View
                         </Button>
                       )

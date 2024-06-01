@@ -12,7 +12,6 @@ import {
 const ProductList = ({ 
   data = [], 
   handleSkuDetails = () => {},
-  readOnly = false
 }) => {
 
 
@@ -42,8 +41,8 @@ const ProductList = ({
                 handleSkuDetails = {handleSkuDetails}
                 productId = {value}
                 index={index}
-                readOnly = {readOnly}
-              
+
+                
               />
 
             ))

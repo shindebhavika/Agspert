@@ -11,12 +11,17 @@ import Products from "../utils/Products.json";
 import FormField from "../Components/FormField";
 import ProductList from "../Components/ProductList";
 import { generateOrderId, getCurrentDate, getOrders, setOrder } from "../utils/helper";
+import { isViewingOrderAtom } from "../recoil-atoms";
+import { useRecoilValue } from "recoil";
 
 
-function SaleOrderForm({ isOpen, onClose, orderToModify}) {
+function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() => {}}) {
 
   const theme = useTheme();
   const { colorMode, toggleColorMode } = useColorMode();
+
+  const isOrederViwing = useRecoilValue(isViewingOrderAtom)
+
 
   // data fields
   const [customerName, setCustomerName] = useState('')
@@ -141,6 +146,7 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
   };
 
   function createOrder() {
+
     const newOrder = {
       customerId,
       customerName,
@@ -150,7 +156,6 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
       isPaid,
       totalPrice,
       lastModified : getCurrentDate(),
-      orderId : generateOrderId()
     }
 
 
@@ -162,9 +167,27 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
     // fetching prev data
     const orders = getOrders()
     // pushing new order
-    orders?.push(newOrder)
+    if(!orderToModify){
+      // its new order
+      orders?.push({
+        ...newOrder,
+        orderId : generateOrderId()
+      })
+    }
+    else {
+      const orderId = orderToModify?.orderId
+      const orderIndex = orders?.findIndex(order => order.orderId === orderId)
+      orders[orderIndex] = {
+        ...orderToModify,
+        ...newOrder
+      }
+    }
+
     // updating orders
     setOrder(orders)
+    // this function inform about the update in order 
+    // so that we could reolicate the update in table
+    handleOrderUpdate()
     // closing modal
     onClose()
     // reseting all data fields
@@ -208,6 +231,11 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
     setTotalPrice(totalPrice)
   }, [items])
 
+  function handleClickCloseBtn () {
+    handleDiscardOrder()
+    onClose()
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" p="1rem">
 
@@ -217,13 +245,13 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
 
         <ModalHeader>Sale Order Form</ModalHeader>
 
-        <ModalCloseButton />
+        <ModalCloseButton  onClick = {handleClickCloseBtn}/>
 
         <ModalBody>
-          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} readOnly = {orderToModify} />
-          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} readOnly = {orderToModify}/>
-          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} readOnly = {orderToModify}/>
-          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} readOnly = {orderToModify}/>
+          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} readOnly = {isOrederViwing} />
+          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} readOnly = {isOrederViwing}/>
+          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} readOnly = {isOrederViwing}/>
+          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} readOnly = {isOrederViwing}/>
 
 
           <FormLabel htmlFor="products" className="input-label-required">
@@ -252,7 +280,6 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
               <ProductList
                 data={product}
                 handleSkuDetails={handleSkuDetails}
-                readOnly = {orderToModify}
               />
             ))
           }
@@ -307,7 +334,11 @@ function SaleOrderForm({ isOpen, onClose, orderToModify}) {
             _hover={{ bg: "#38A169", color: "white" }}
             onClick={createOrder}
           >
-            Create Sale Order
+            {
+              orderToModify ?
+              'Update Sale Order':
+              'Create Sale Order'
+            }
           </Button>
 
         </ModalFooter>

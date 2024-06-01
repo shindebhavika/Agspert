@@ -10,17 +10,21 @@ import {
   CardFooter,
   FormLabel,
 } from "@chakra-ui/react";
+import { isViewingOrderAtom } from "../recoil-atoms";
+import { useRecoilValue } from "recoil";
 
 export default function ProductCard({ 
   data = {}, 
   index = 0, 
   handleSkuDetails = () => { }, 
   productId = '',
-  readOnly = false 
 }) {
 
   const [price, setPrice] = useState('')
   const [quantity, setQuantity] = useState('')
+
+  const isOrederViwing = useRecoilValue(isViewingOrderAtom)
+
 
   const {
     id = '',
@@ -81,7 +85,7 @@ export default function ProductCard({
                   (e) => setPrice(e.target.value)
                 }
                 value={price}
-                readOnly = {readOnly}
+                readOnly = {isOrederViwing}
               />
             </Flex>
             <Flex flexDirection="column">
@@ -94,7 +98,7 @@ export default function ProductCard({
                   (e) => setQuantity(e.target.value)
                 }
                 value={quantity}
-                readOnly = {readOnly}
+                readOnly = {isOrederViwing}
 
               />
             </Flex>
