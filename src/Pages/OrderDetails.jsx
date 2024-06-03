@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Tr, Th, Table, Thead,
   Tbody, TableContainer,
-  Td, Tfoot, Button, Flex,
+  Td, Tfoot, Button, Flex,Text
 } from '@chakra-ui/react';
 import { EditIcon, ViewIcon } from '@chakra-ui/icons';
 import SaleOrderForm from './SaleOrderForm'; // assuming SaleOrderForm component exists
@@ -99,13 +99,13 @@ function OrderDetails() {
 
         <Table size="sm">
 
-          <Thead bg="#9AE6B4">
+          <Thead bg="#9AE6B4" >
             <Tr p="300px">
-              <Th p="20px">ID</Th>
-              <Th>Customer</Th>
-              <Th isNumeric>Total Price</Th>
-              <Th>Last Modified</Th>
-              <Th>Actions</Th>
+              <Th p="20px" color="black" fontWeight="500" fontSize={"1rem"}>ID</Th>
+              <Th color="black" fontWeight="500" fontSize={"1rem"}>Customer</Th>
+              <Th isNumeric color="black" fontWeight="500" fontSize={"1rem"}>Total Price</Th>
+              <Th color="black" fontWeight="500" fontSize={"1rem"}>Last Modified</Th>
+              <Th color="black" fontWeight="500" fontSize={"1rem"}>Actions</Th>
             </Tr>
           </Thead>
 
@@ -114,7 +114,7 @@ function OrderDetails() {
               <Tr key={order?.id}>
                 <Td>{order?.customerId}</Td>
                 <Td>{order?.customerName}</Td>
-                <Td isNumeric>${order?.totalPrice?.toFixed(2)}</Td>
+                <Td isNumeric>{order?.totalPrice?.toFixed(2)} ₹</Td>
                 <Td>{order?.lastModified}</Td>
                 <Td>
                   {

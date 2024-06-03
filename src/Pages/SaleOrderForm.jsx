@@ -14,26 +14,26 @@ import { generateOrderId, getCurrentDate, getOrders, setOrder } from "../utils/h
 import { isViewingOrderAtom } from "../recoil-atoms";
 import { useRecoilValue } from "recoil";
 
-
-function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() => {}}) {
-
+function SaleOrderForm({ isOpen, onClose, orderToModify, handleOrderUpdate = () => {} }) {
   const theme = useTheme();
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode } = useColorMode();
 
-  const isOrederViwing = useRecoilValue(isViewingOrderAtom)
+  const isOrederViwing = useRecoilValue(isViewingOrderAtom);
 
-
-  // data fields
-  const [customerName, setCustomerName] = useState('')
-  const [customerId, setCustomerId] = useState('')
-  const [invoiceDate, setInvoiceDate] = useState('')
-  const [invoiceNo, setInvoiceNo] = useState('')
-  const [isPaid, setIsPaid] = useState(false)
+  // Data fields
+  const [customerName, setCustomerName] = useState('');
+  const [customerId, setCustomerId] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const [invoiceNo, setInvoiceNo] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState({});
-  const [totalPrice, setTotalPrice] = useState(0)
+  const [totalPrice, setTotalPrice] = useState(0);
 
-  // to set on change data in respective fields
+  // Error messages
+  const [errors, setErrors] = useState({});
+
+  // To set on change data in respective fields
   function handleOnChangeData(key, value) {
     const setFuncByKey = {
       customerName: setCustomerName,
@@ -41,22 +41,23 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
       invoiceDate: setInvoiceDate,
       invoiceNo: setInvoiceNo,
       isPaid: setIsPaid,
-    }
-    setFuncByKey[key](value)
+    };
+    setFuncByKey[key](value);
   }
 
   function handleDiscardOrder() {
-    setCustomerName('')
-    setCustomerId('')
-    setInvoiceDate('')
-    setInvoiceNo('')
-    setIsPaid(false)
-    setProducts([])
-    setItems({})
-    setTotalPrice(0)
+    setCustomerName('');
+    setCustomerId('');
+    setInvoiceDate('');
+    setInvoiceNo('');
+    setIsPaid(false);
+    setProducts([]);
+    setItems({});
+    setTotalPrice(0);
+    setErrors({});
   }
 
-  function prefillData (data) {
+  function prefillData(data) {
     const {
       customerId,
       customerName,
@@ -65,23 +66,22 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
       products,
       isPaid,
       totalPrice,
-    } = data || {}
+    } = data || {};
 
-    setCustomerId(customerId)
-    setCustomerName(customerName)
-    setInvoiceDate(invoiceDate)
-    setInvoiceNo(invoiceNo)
-    setIsPaid(isPaid)
-    setTotalPrice(totalPrice)
-    setProducts(products)
- 
+    setCustomerId(customerId);
+    setCustomerName(customerName);
+    setInvoiceDate(invoiceDate);
+    setInvoiceNo(invoiceNo);
+    setIsPaid(isPaid);
+    setTotalPrice(totalPrice);
+    setProducts(products);
   }
 
   useEffect(() => {
-    // if we have order to modify will prefill all the data
-    if(!orderToModify) return ;
-    prefillData(orderToModify)
-  }, [orderToModify])
+    // If we have an order to modify, prefill all the data
+    if (!orderToModify) return;
+    prefillData(orderToModify);
+  }, [orderToModify]);
 
   const customStyles = {
     control: (provided) => ({
@@ -103,10 +103,10 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
       backgroundColor: state.isSelected
         ? theme.colors.teal[500]
         : state.isFocused
-          ? theme.colors.teal[100]
-          : colorMode === "dark"
-            ? theme.colors.gray[700]
-            : theme.colors.white,
+        ? theme.colors.teal[100]
+        : colorMode === "dark"
+        ? theme.colors.gray[700]
+        : theme.colors.white,
       color: colorMode === "dark" ? theme.colors.white : theme.colors.black,
       "&:active": {
         backgroundColor: theme.colors.teal[500],
@@ -142,10 +142,25 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
   };
 
   const handleSelectChange = (selectedProducts) => {
-    setProducts(selectedProducts)
+    setProducts(selectedProducts);
   };
 
+  function validateInputs() {
+    const newErrors = {};
+    if (!customerName) newErrors.customerName = "Customer name is required";
+    if (!customerId) newErrors.customerId = "Customer ID is required";
+    if (!invoiceDate) newErrors.invoiceDate = "Invoice date is required";
+    if (!invoiceNo) newErrors.invoiceNo = "Invoice number is required";
+    if (products.length === 0) newErrors.products = "At least one product must be selected";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
   function createOrder() {
+    if (!validateInputs()) {
+      return;
+    }
 
     const newOrder = {
       customerId,
@@ -155,115 +170,131 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
       products,
       isPaid,
       totalPrice,
-      lastModified : getCurrentDate(),
-    }
+      lastModified: getCurrentDate(),
+    };
 
-
-    // This function will get called on creating new order and also for editing prev order
-    // so we have to handle this accordingly 
-    // to solve this we can check the orderId
-
-
-    // fetching prev data
-    const orders = getOrders()
-    // pushing new order
-    if(!orderToModify){
-      // its new order
-      orders?.push({
+    // Fetching prev data
+    const orders = getOrders();
+    // Pushing new order
+    if (!orderToModify) {
+      // It's a new order
+      orders.push({
         ...newOrder,
-        orderId : generateOrderId()
-      })
-    }
-    else {
-      const orderId = orderToModify?.orderId
-      const orderIndex = orders?.findIndex(order => order.orderId === orderId)
+        orderId: generateOrderId(),
+      });
+    } else {
+      const orderId = orderToModify.orderId;
+      const orderIndex = orders.findIndex((order) => order.orderId === orderId);
       orders[orderIndex] = {
         ...orderToModify,
-        ...newOrder
-      }
+        ...newOrder,
+      };
     }
 
-    // updating orders
-    setOrder(orders)
-    // this function inform about the update in order 
-    // so that we could reolicate the update in table
-    handleOrderUpdate()
-    // closing modal
-    onClose()
-    // reseting all data fields
-    handleDiscardOrder()
+    // Updating orders
+    setOrder(orders);
+    // Inform about the update in order
+    handleOrderUpdate();
+    // Closing modal
+    onClose();
+    // Resetting all data fields
+    handleDiscardOrder();
   }
 
-  function handleSkuDetails({
-    price, quantity,
-    productId, id
-  }) {
-
-    // This function is for adding the skus prices and quantity
-    // This is critical for now can be ignored, will see this at last
-
-    const storedProducts = [...products]
-    const productIndex = products.findIndex(product => product.value = productId)
-    const {
-      sku = []
-    } = storedProducts[productIndex]
-    const skuIndex = sku.findIndex(sku => sku.id = id)
+  function handleSkuDetails({ price, quantity, productId, id }) {
+    const storedProducts = [...products];
+    const productIndex = products.findIndex((product) => product.value === productId);
+    const { sku = [] } = storedProducts[productIndex];
+    const skuIndex = sku.findIndex((sku) => sku.id === id);
     const updatedSku = {
-      ...(sku?.[skuIndex] || {}),
-      price, quantity
-    }
-    sku.splice(skuIndex, 1, updatedSku)
-    storedProducts[productIndex].sku = sku
-    // we can ignore this for now 
-    // will undestand this later
+      ...(sku[skuIndex] || {}),
+      price,
+      quantity,
+    };
+    sku.splice(skuIndex, 1, updatedSku);
+    storedProducts[productIndex].sku = sku;
     setItems({
       ...items,
-      [id]: price * quantity
-    })
+      [id]: price * quantity,
+    });
   }
 
   useEffect(() => {
-    // to get updated total price of order
-    let totalPrice = 0
-    Object.values(items).forEach(
-      price => totalPrice = totalPrice + price
-    )
-    setTotalPrice(totalPrice)
-  }, [items])
+    // To get updated total price of order
+    let totalPrice = 0;
+    Object.values(items).forEach((price) => (totalPrice += price));
+    setTotalPrice(totalPrice);
+  }, [items]);
 
-  function handleClickCloseBtn () {
-    handleDiscardOrder()
-    onClose()
+  function handleClickCloseBtn() {
+    handleDiscardOrder();
+    onClose();
   }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" p="1rem">
-
       <ModalOverlay />
-
       <ModalContent>
-
         <ModalHeader>Sale Order Form</ModalHeader>
-
-        <ModalCloseButton  onClick = {handleClickCloseBtn}/>
-
+        <ModalCloseButton onClick={handleClickCloseBtn} />
         <ModalBody>
-          <FormField id="invoiceNumber" label="Invoice Number" placeholder="Enter Invoice Number" mb={3} onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)} value={invoiceNo} readOnly = {isOrederViwing} />
-          <FormField id="invoiceDate" label="Invoice Date" type="date" placeholder="Select Date" onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)} value={invoiceDate} readOnly = {isOrederViwing}/>
-          <FormField id="customer" label="Customer" placeholder="Enter Customer Name" mb={6} onChange={(e) => handleOnChangeData('customerName', e.target.value)} value={customerName} readOnly = {isOrederViwing}/>
-          <FormField id="customerId" label="Customer Id" placeholder="Enter Customer Idr" mb={3} onChange={(e) => handleOnChangeData('customerId', e.target.value)} value={customerId} readOnly = {isOrederViwing}/>
+          <FormField
+            id="invoiceNumber"
+            label="Invoice Number"
+            placeholder="Enter Invoice Number"
+            mb={3}
+            onChange={(e) => handleOnChangeData('invoiceNo', e.target.value)}
+            value={invoiceNo}
+            readOnly={isOrederViwing}
+            required
+          />
+          {errors.invoiceNo && <Text color="red.500">{errors.invoiceNo}</Text>}
 
+          <FormField
+            id="invoiceDate"
+            label="Invoice Date"
+            type="date"
+            placeholder="Select Date"
+            onChange={(e) => handleOnChangeData('invoiceDate', e.target.value)}
+            value={invoiceDate}
+            readOnly={isOrederViwing}
+            required
+          />
+          {errors.invoiceDate && <Text color="red.500">{errors.invoiceDate}</Text>}
+
+          <FormField
+            id="customer"
+            label="Customer"
+            placeholder="Enter Customer Name"
+            mb={6}
+            onChange={(e) => handleOnChangeData('customerName', e.target.value)}
+            value={customerName}
+            readOnly={isOrederViwing}
+            required
+          />
+          {errors.customerName && <Text color="red.500">{errors.customerName}</Text>}
+
+          <FormField
+            id="customerId"
+            label="Customer Id"
+            placeholder="Enter Customer Id"
+            mb={3}
+            onChange={(e) => handleOnChangeData('customerId', e.target.value)}
+            value={customerId}
+            readOnly={isOrederViwing}
+            required
+          />
+          {errors.customerId && <Text color="red.500">{errors.customerId}</Text>}
 
           <FormLabel htmlFor="products" className="input-label-required">
             All Product
           </FormLabel>
-
           <Select
             id="products"
             options={Products.map((product) => ({
               value: product.id,
               label: product.name,
-              sku: product.sku
+              sku: product.sku,
             }))}
             isMulti
             placeholder="Select Products"
@@ -272,47 +303,34 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             onChange={handleSelectChange}
             closeMenuOnSelect={false}
             value={products}
-            isDisabled = {isOrederViwing}
+            isDisabled={isOrederViwing}
+            required
           />
+          {errors.products && <Text color="red.500">{errors.products}</Text>}
 
-          {
-            products?.map((product) => (
-              <ProductList
-                data={product}
-                handleSkuDetails={handleSkuDetails}
-              />
-            ))
-          }
-
-
+          {products.map((product) => (
+            <ProductList key={product.id} data={product} handleSkuDetails={handleSkuDetails} />
+          ))}
 
           <Flex justifyContent="space-between">
-            <Checkbox 
-              className="custom-checkbox" 
-              colorScheme="green" 
+            <Checkbox
+              className="custom-checkbox"
+              colorScheme="green"
               size="lg"
-              onChange={
-                () => setIsPaid(!isPaid)
-              }
+              onChange={() => setIsPaid(!isPaid)}
               isChecked={isPaid}
             >
               Is Paid
             </Checkbox>
 
             <Flex className="total-summary">
-              <Text className="total-summary-text">
-                Total Price: {totalPrice}
-              </Text>
-              <Text className="total-summary-text">
-                Total Items: {Object.keys(items).length}
-              </Text>
+              <Text className="total-summary-text">Total Price: {totalPrice}</Text>
+              <Text className="total-summary-text">Total Items: {Object.keys(items).length}</Text>
             </Flex>
           </Flex>
         </ModalBody>
 
-
-        <ModalFooter justifyContent="space-between" >
-
+        <ModalFooter justifyContent="space-between">
           <Button
             size="md"
             height="48px"
@@ -322,8 +340,7 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             bg="#FFF5F5"
             _hover={{ bg: "#E53E3E", color: "white" }}
             onClick={handleDiscardOrder}
-            isDisabled = {isOrederViwing}
-
+            isDisabled={isOrederViwing}
           >
             Discard
           </Button>
@@ -335,15 +352,10 @@ function SaleOrderForm({ isOpen, onClose, orderToModify,handleOrderUpdate =() =>
             borderColor="green"
             _hover={{ bg: "#38A169", color: "white" }}
             onClick={createOrder}
-            isDisabled = {isOrederViwing}
+            isDisabled={isOrederViwing}
           >
-            {
-              orderToModify ?
-              'Update Sale Order':
-              'Create Sale Order'
-            }
+            {orderToModify ? 'Update Sale Order' : 'Create Sale Order'}
           </Button>
-
         </ModalFooter>
       </ModalContent>
     </Modal>

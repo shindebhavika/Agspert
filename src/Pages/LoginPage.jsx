@@ -45,13 +45,15 @@ const LoginPage = ({ setIsLogin }) => {
   };
 
   return (
-    <Flex h="100vh" alignItems="center" justifyContent="center" padding="309px" flexDirection="column">
+    <Flex h="100vh" alignItems="center" justifyContent="center" padding="309px" flexDirection="column" >
       <Flex
         flexDirection="column"
         bg={formBackground}
         p={12}
         borderRadius={8}
         boxShadow="lg"
+      
+        width="500px"
       >
         <Heading mb={6}>Log In</Heading>
         <Input
@@ -74,6 +76,9 @@ const LoginPage = ({ setIsLogin }) => {
         {error && <Text color="red.500" mb={4}>{error}</Text>}
         <Button colorScheme="teal" mb={8} onClick={handleLogin}>
           Log In
+        </Button>
+        <Button mb={8} onClick={handleLogin}>
+      get dummy credential
         </Button>
         <ToggleTheme />
       </Flex>
