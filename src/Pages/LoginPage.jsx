@@ -44,15 +44,24 @@ const LoginPage = ({ setIsLogin }) => {
     }
   };
 
+  const handleGetDummyCredential = () => {
+    // Get a random index within the range of the authentication data array
+    const randomIndex = Math.floor(Math.random() * authenticationData.length);
+    // Get the username and password from the random index
+    const { username, password } = authenticationData[randomIndex];
+    // Set the username and password state
+    setUsername(username);
+    setPassword(password);
+  };
+
   return (
-    <Flex h="100vh" alignItems="center" justifyContent="center" padding="309px" flexDirection="column" >
+    <Flex h="100vh" alignItems="center" justifyContent="center" padding="309px" flexDirection="column">
       <Flex
         flexDirection="column"
         bg={formBackground}
         p={12}
         borderRadius={8}
         boxShadow="lg"
-      
         width="500px"
       >
         <Heading mb={6}>Log In</Heading>
@@ -74,11 +83,11 @@ const LoginPage = ({ setIsLogin }) => {
           onFocus={() => setError("")} // Clear error message on focus
         />
         {error && <Text color="red.500" mb={4}>{error}</Text>}
-        <Button colorScheme="teal" mb={8} onClick={handleLogin}>
+        <Button colorScheme="teal" mb={4} onClick={handleLogin}>
           Log In
         </Button>
-        <Button mb={8} onClick={handleLogin}>
-      get dummy credential
+        <Button mb={4} onClick={handleGetDummyCredential}>
+          Get Dummy Credential
         </Button>
         <ToggleTheme />
       </Flex>
